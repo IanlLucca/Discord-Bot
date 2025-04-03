@@ -53,21 +53,107 @@ bot.run(TOKEN)                                                    #Vai fazer o b
 <p>&nbsp;&nbsp;&nbsp;&nbsp;Se quiser, pode apagar as anotações de cada linha (as q estão em "#"), mas coloque o seu <strong>Token</strong> no lugar indicado para o programa conectar e indentificar que é o seu bot. Agora rode o programa e, se você seguiu o passo a passo perfeitamente, seu bot vai ficar online no discord: </p>
 
 <div style="display: flex;">
-  <img src="https://github.com/user-attachments/assets/bcc06e20-26c2-4537-b099-3eaa4f002c94" width="500">
+  <img src="https://github.com/user-attachments/assets/bcc06e20-26c2-4537-b099-3eaa4f002c94" width="250">
 </div>
 <p>&nbsp;&nbsp;&nbsp;&nbsp;Vale ressaltar que o bot só vai ficar online quando você estiver com o programa rodando, quando você fechar o bot também desligara e ficara inativo. Se você quer que seu bot fique online por tempo integral, vai ter que colocalo em alguma hospedagem, que garanta a segurança dos arquivos.</p>
 
 <h2>#3 - Comandos do Bot</h2>
-<p>&nbsp;&nbsp;&nbsp;&nbsp;O arquivo que temos até agora é bem basico, o bot não consegue fazer, praticamente, nada, só analisar conversar e ver os membros. Portanto, vamos programar e adicionar alguns comando para ele: </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;O arquivo que temos até agora é bem basico, o bot não consegue fazer, praticamente, nada, só analisar conversar e ver os membros. Portanto, vamos adicionar alguns comandos como: </p>
+<h3>● Mensagens de Texto ●</h3>
 
 ```
-@client.event
+@bot.event
 async def on_message(message):
     if message.author == client.user:
         return
-    print(f'📩 Mensagem recebida de {message.author}: {message.content}')       #Toda vez q o bot ver alguma menssagem, ele vai mostrar no terminal
-    if message.content == '?regras':
-        await message.channel.send("📜 Aqui estão as regras do servidor: \n1. Seja respeitoso. \n2. Não faça spam. \n3. Siga as diretrizes da comunidade.")
+    print(f'📩 Mensagem recebida de {message.author}: {message.content}')
+    if message.content == '!oi':
+        await message.channel.send(f'👋Olá {message.author.mention}!!!')
+    elif message.content == '!adeus':
+        await message.channel.send(f"👋Adeus {message.author.mention}!!!") 
+```
+<P>&nbsp;&nbsp;&nbsp;&nbsp;Primeiramente o bot vai ler todos chats que ele tem permissão e toda vez que alguém digitar algo vai aparecer no terminal. Depois quando uma pessoa digitar os comandos "!oi" e "!adeus", o bot vai responder exatamente a mensagem definida, mas só vai responder se o comando estiver exatamente escrito do jeito definido. Para corrigir isso, podemos fazer com que o bot leia todas as mensagens mas em letras minusculas, sem ter essa confusão entre letras minusculas e maiusculas: </P>
+
+```
+@bot.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+    print(f'📩 Mensagem recebida de {message.author}: {message.content}')
+    mensagem = message.content.lower()
+    if mensagem == '!oi':
+        await message.channel.send(f"👋Olá {message.author.mention}!!!") 
+    elif mensagem == '!adeus':
+        await message.channel.send(f"👋Adeus {message.author.mention}!!!")
+```
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Podemos adicionar diversas outras mensagens já determinadas com comandos especificos, mas se formos ficar adicionando "elif" toda vez, nosso código fiicará muito confuso. Portanto eu recomendo utilizar dessa forma:
+</p>
+
+```
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    print(f'📩 Mensagem recebida de {message.author}: {message.content}')
+    mensagem = message.content.lower()
+    comandos = {
+        "!oi": f"👋 Olá {message.author.mention}!!!",
+        "!adeus": f"👋 Adeus {message.author.mention}!!!",
+        "!regras": "📜 Aqui estão as regras do servidor: \n1. Seja respeitoso. \n2. Não faça spam. \n3. Siga as diretrizes da comunidade."
+    }    
+    if mensagem in comandos:                                    # Verifica se a mensagem está nos "comandos"
+        await message.channel.send(comandos[mensagem])
+```
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Dessa forma seu código ficará mais visivel para você modificalo quando quiser e adicionar outras interações, como eu fiz adicionando "!regras".</p>
+
+<h3>● Mensagem de boas vindas ●</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Para adicionar uma mensagem de boas vindas personalizada é bem simples, basta você adicionar o seguinte comando e personalisar o texto como quiser: </p>
+
+```
+@bot.event
+async def on_member_join(member):               
+    print(f'👋 {member.name} entrou no servidor!')  #Vai aparecer no seu terminal toda vez q alguem entrar no servidor
+    guild = member.guild
+    if guild.system_channel is not None:
+        mensagembemvindo = f'Bem-vindo(a) {member.mention} ao {guild.name}!'
+        await guild.system_channel.send(mensagembemvindo)
+```
+![image](https://github.com/user-attachments/assets/f681474c-4c3f-45d4-b0d0-758d0aa2cfe3)
+
+<h3>● Randomizar Mensagens ●</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Randomização é um método bem conhecido, permite que deixe as coisas aleatórias até certo nível. Para fazer isso, vamos utilizar uma biblioteca nativa do <strong>Python</strong>, a biblioteca <strong>Random</strong>: </p>
+
+```
+import random
+```
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Para ser mais facil de randomizar, vamos criar uma <strong>array</strong> como essa: </p>
+
+```
+frasesdeoi = [                                              #Lista de frases de oi, para aleatorizar
+    "Como você está?",
+    "Tudo bem?",
+    "Como posso ajudar?",
+    "O que você precisa?",
+    "Como vai?"
+]
+```
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Agora é só mandar o próprio programa randomizar essas palavras, assim, toda vez que alguém solicitar o comando, o bot vai escolher aleatóriamente uma dessas frases: </p>
+
+```
+if mensagem in comandos:                                    # Verifica se a mensagem está nos "comandos"
+        await message.channel.send(comandos[mensagem])
+        if mensagem == "!oi":
+           await message.channel.send(random.choice(frasesdeoi))  
+```
+![image](https://github.com/user-attachments/assets/acc6dee6-393f-469d-b4ea-fcb031d66209)
+
+<h3>● Desligar o Bot por Comando ●</h3>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Outro tipo de comando simples, mas que deve ser usado corretamente. Esse tipo de comando você não deve deixar aberto ao publico, se não, qualquer um pode desligar o seu bot, portanto utilize com sabedoria e não deixe esse comando à mostra: </p>
+
+```
+if mensagem == "!adeus":
+        await message.channel.send('Desligando...')
+        await bot.close()                                       #Desliga o bot  
 ```
 
   <h2>🚧AINDA TERMINANDO A DOCUMENTAÇÃO🚧</h2>
